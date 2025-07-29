@@ -160,12 +160,12 @@ def create_average_outputs(years, routes_dir='routes'):
             first_vals = combined_traffic_df.groupby(section_cols, as_index=False)[col].first()
             avg_traffic_df = avg_traffic_df.merge(first_vals, on=section_cols, how='left')
     
-    # Load crash data
+    # load crash data
     crash_df = pd.read_csv('data/2019-2023-crash-data.csv', dtype=str)
     crash_df['CORRIDOR'] = crash_df['CORRIDOR'].str.strip().str.upper()
     crash_df['REF_POINT_FLOAT'] = crash_df['REF_POINT'].apply(parse_milepost)
     
-    # Build corridor index from averaged traffic data
+    # build corridor index from averaged traffic data
     corridor_index = {}
     for _, row in avg_traffic_df.iterrows():
         corr_id = row['CORR_ID']
@@ -180,18 +180,18 @@ def create_average_outputs(years, routes_dir='routes'):
             'CORR_MP_FLOAT': parse_milepost(row['CORR_MP']),
             'CORR_ENDMP_FLOAT': parse_milepost(row['CORR_ENDMP']),
         }
-        # Calculate MILES_DRIVEN using averaged TYC_AADT
+        # calculate miles driven using averaged TYC_AADT
         section['MILES_DRIVEN'] = section['SEC_LNT_MI'] * section['TYC_AADT']
         corridor_index.setdefault(corr_id, []).append(section)
     
-    # Match all crashes to sections
+    # match all crashes to sections
     matched_sections = []
     for idx, crash in crash_df.iterrows():
         match = match_crash_to_section(crash, corridor_index)
         if match:
             matched_sections.append(match)
     
-    # Aggregate CRASHES per section (sum across all years)
+    # aggregate crashes per section (sum across all years)
     output_df = pd.DataFrame(matched_sections)
     agg_cols = ['CORRIDOR', 'SEC_LNT_MI', 'TYC_AADT', 'MILES_DRIVEN', 'LOCATION', 'COUNTY', 'SITE_ID', 'CORR_MP', 'CORR_ENDMP', 'DEPT_ID']
     
@@ -199,19 +199,19 @@ def create_average_outputs(years, routes_dir='routes'):
         output_df = output_df.groupby(agg_cols, as_index=False)['CRASHES'].sum()
         output_df = output_df.sort_values(['CORRIDOR', 'SITE_ID', 'CORR_MP'])
 
-        # Add CARS_PER_ACC and MILES_PER_ACC columns
+        # add CARS_PER_ACC and MILES_PER_ACC columns
         output_df['CARS_PER_ACC'] = output_df['TYC_AADT'] / output_df['CRASHES']
         output_df['MILES_PER_ACC'] = output_df['MILES_DRIVEN'] / output_df['CRASHES']
 
-        # Write averaged outputs
+        # write averaged outputs
         output_df.to_csv('merged_traffic_average.csv', index=False)
         print(f"Average output written to merged_traffic_average.csv with {len(output_df)} rows.")
 
-        # Write sorted by CARS_PER_ACC (ascending)
+        # write sorted by CARS_PER_ACC (ascending)
         output_df.sort_values('CARS_PER_ACC', ascending=True).to_csv('sort_car_merged_traffic_average.csv', index=False)
         print("Average output written to sort_car_merged_traffic_average.csv")
 
-        # Write sorted by MILES_PER_ACC (ascending)
+        # write sorted by MILES_PER_ACC (ascending)
         output_df.sort_values('MILES_PER_ACC', ascending=True).to_csv('sort_mile_merged_traffic_average.csv', index=False)
         print("Average output written to sort_mile_merged_traffic_average.csv")
 
