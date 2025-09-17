@@ -62,7 +62,7 @@ What readers should know
 - Rate metrics account for how much traffic a road sees; a busy road with more crashes can still have a lower crash rate than a quieter but more dangerous stretch.
 - We limited the presented analysis to Interstates, US Highways, Montana Highways, and Secondary Montana Highways.
 
-## This is the data we used (folder: `data/`)
+## Data used (folder: `data/`)
 
 Below are the primary inputs that were used in the analysis and what each is used for.
 
