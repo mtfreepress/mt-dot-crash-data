@@ -9,7 +9,7 @@ if command -v sha256sum >/dev/null 2>&1; then
 elif command -v shasum >/dev/null 2>&1; then
   SHA256="shasum -a 256"
 else
-  echo "⚠️  Warning: no sha256 tool found (need sha256sum or shasum). Skipping file comparison check."
+  echo "Warning: no sha256 tool found (need sha256sum or shasum). Skipping file comparison check."
   SHA256=""
 fi
 
