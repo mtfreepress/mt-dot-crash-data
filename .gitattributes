@@ -9,3 +9,9 @@ data/Traffic_Yearly_Counts_2023/TYC_2023.shp filter=lfs diff=lfs merge=lfs -text
 data/Traffic_Yearly_Counts_2022/TYC_2022.dbf filter=lfs diff=lfs merge=lfs -text
 data/Traffic_Yearly_Counts_2022/TYC_2022.shp filter=lfs diff=lfs merge=lfs -text
 data/crash-geojson/crash-geojson-all.geojson filter=lfs diff=lfs merge=lfs -text
+data/Traffic_Yearly_Counts_2019/TYC_2019.json filter=lfs diff=lfs merge=lfs -text
+data/Traffic_Yearly_Counts_2020/TYC_2020.json filter=lfs diff=lfs merge=lfs -text
+data/Traffic_Yearly_Counts_2021/TYC_2021.json filter=lfs diff=lfs merge=lfs -text
+data/Traffic_Yearly_Counts_2022/TYC_2022.json filter=lfs diff=lfs merge=lfs -text
+data/Traffic_Yearly_Counts_2023/TYC_2023.json filter=lfs diff=lfs merge=lfs -text
+data/Traffic_Yearly_Counts_2024/TYC_2024.json filter=lfs diff=lfs merge=lfs -text
