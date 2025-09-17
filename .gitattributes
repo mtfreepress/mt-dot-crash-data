@@ -15,3 +15,4 @@ data/Traffic_Yearly_Counts_2021/TYC_2021.json filter=lfs diff=lfs merge=lfs -tex
 data/Traffic_Yearly_Counts_2022/TYC_2022.json filter=lfs diff=lfs merge=lfs -text
 data/Traffic_Yearly_Counts_2023/TYC_2023.json filter=lfs diff=lfs merge=lfs -text
 data/Traffic_Yearly_Counts_2024/TYC_2024.json filter=lfs diff=lfs merge=lfs -text
+mtfp_result_data/manual-segments/all-routes/all-routes.geojson filter=lfs diff=lfs merge=lfs -text
