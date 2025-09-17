@@ -19,8 +19,8 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     for year in years:
-        dbf_path = os.path.join(script_dir, f"data/Traffic_Yearly_Counts_{year}", f"TYC_{year}.dbf")
-        csv_path = os.path.join(script_dir, f"data/Traffic_Yearly_Counts_{year}", f"TYC_{year}.csv")
+        dbf_path = os.path.join(script_dir, f"../data/Traffic_Yearly_Counts_{year}", f"TYC_{year}.dbf")
+        csv_path = os.path.join(script_dir, f"../data/Traffic_Yearly_Counts_{year}", f"TYC_{year}.csv")
         if os.path.exists(dbf_path):
             print(f"Converting {dbf_path} to {csv_path} ...")
             convert_dbf_to_csv(dbf_path, csv_path)
