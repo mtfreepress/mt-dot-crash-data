@@ -6,9 +6,9 @@ import json
 from collections import Counter
 
 ROOT = os.path.dirname(__file__)
-MANUAL_DIR = os.path.join(ROOT, "manual-segments")
-# output analysis directory
-TRIP_DIR = os.path.join(ROOT, "trip_analysis")
+MANUAL_DIR = os.path.join(ROOT, "output", "manual-segments")
+# output analysis directory under output/
+TRIP_DIR = os.path.join(ROOT, "output", "trip_analysis")
 OUT_CAR = os.path.join(TRIP_DIR, "per_car.csv")
 OUT_MILE = os.path.join(TRIP_DIR, "per_mile.csv")
 # per-vmt CSV (crashes per 100M VMT)
@@ -163,7 +163,7 @@ def main():
         print("manual-segments directory not found:", MANUAL_DIR)
         return
 
-    # ensure output dirs exist
+    # ensure output dirs exist under output/
     os.makedirs(TRIP_DIR, exist_ok=True)
     per_car_dir = os.path.join(TRIP_DIR, "per_car")
     per_mile_dir = os.path.join(TRIP_DIR, "per_mile")

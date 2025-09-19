@@ -33,9 +33,9 @@ def main():
         print("Please check the CSV file format and ensure it has the correct headers.")
         return
     
-    # output directory
-    output_dir = Path('./manual-segments')
-    output_dir.mkdir(exist_ok=True)
+    # output directory (moved under output/ to keep outputs together)
+    output_dir = Path('./output/manual-segments')
+    output_dir.mkdir(parents=True, exist_ok=True)
     
     # initialize containers for combined data
     all_csv_data = []
@@ -47,7 +47,8 @@ def main():
         'S-518': ['U-5832'],
         # MDT considers final segment part of S-345
         'S-345': ['U-1216'],
-        'S-347': ['U-602']
+        'S-347': ['U-602'],
+        'S-474': ['U-8135'],
     }
 
     # group by route AND DEPT_ID (since same route can have different dept IDs)
@@ -61,8 +62,8 @@ def main():
         
         # read the complete route data
         try:
-            route_csv_path = f'./all_roads/{route}.csv'
-            route_geojson_path = f'./all_roads/{route}.geojson'
+            route_csv_path = f'./output/all_roads/{route}.csv'
+            route_geojson_path = f'./output/all_roads/{route}.geojson'
             
             if not os.path.exists(route_csv_path):
                 print(f"Warning: {route_csv_path} not found, skipping route {route}")
@@ -330,15 +331,15 @@ def main():
     # Create combined files
     if all_csv_data:
         # print("\nCreating combined files...")
-        
-        # Combine all CSV data and write to a separate all-routes/ directory
+
+        # Combine all CSV data and write to a separate all-routes/ directory under output/
         combined_csv = pd.concat(all_csv_data, ignore_index=True)
         combined_csv = combined_csv.sort_values(['DEPT_ID', 'CORR_MP'])
-        all_routes_dir = Path('./manual-segments/all-routes')
-        all_routes_dir.mkdir(exist_ok=True)
+        all_routes_dir = Path('./output/manual-segments/all-routes')
+        all_routes_dir.mkdir(parents=True, exist_ok=True)
         combined_csv.to_csv(all_routes_dir / 'all-routes.csv', index=False)
         # print(f"Created all-routes/all-routes.csv with {len(combined_csv)} total segments")
-        
+
         # Create combined GeoJSON and write it to all-routes/
         combined_geojson = {
             "type": "FeatureCollection",
@@ -351,7 +352,7 @@ def main():
             },
             "features": all_geojson_features
         }
-        
+
         with open(all_routes_dir / 'all-routes.geojson', 'w') as f:
             json.dump(combined_geojson, f, indent=2)
         # print(f"Created all-routes/all-routes.geojson with {len(all_geojson_features)} total features")

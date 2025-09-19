@@ -15,7 +15,7 @@ def parse_milepost(mp_str):
     except ValueError:
         return None
 
-def load_on_system_routes(path='data/Montana_On_System_Routes_OD.csv'):
+def load_on_system_routes(path='raw-mdt-source-data/Montana_On_System_Routes_OD.csv'):
     """Load on-system routes CSV for metadata enrichment"""
     if not os.path.exists(path):
         # print(f"[DEBUG] On-system file not found: {path}")
@@ -121,7 +121,7 @@ def load_base_segments_2023():
     segments_df['CORR_ENDMP_FLOAT'] = segments_df['CORR_ENDMP'].apply(parse_milepost)
     
     #  on-system-routes
-    on_system = load_on_system_routes('data/Montana_On_System_Routes_OD.csv')
+    on_system = load_on_system_routes('raw-mdt-source-data/Montana_On_System_Routes_OD.csv')
     segments_df = enrich_segments_with_metadata(segments_df, on_system)
     
     return segments_df
@@ -247,8 +247,8 @@ def match_crash_to_section(crash, corridor_index):
     return None
 
 def create_simplified_average_output(
-    crash_csv='data/2019-2023-crash-data.csv',
-    merged_dir='processed-data/merged-data',
+    crash_csv='raw-mdt-source-data/2019-2023-crash-data.csv',
+    merged_dir='output/merged_data',
     years=[2023, 2022, 2021, 2020, 2019]
 ):
     """Create only the averaged output file"""
@@ -414,7 +414,7 @@ def create_simplified_average_output(
     print(f"Segments with crashes: {(output_df['TOTAL_CRASHES'] > 0).sum()}")
     print(f"Segments without crashes: {(output_df['TOTAL_CRASHES'] == 0).sum()}")
 
-    all_roads_dir = 'all_roads'
+    all_roads_dir = os.path.join('output', 'all_roads')
     os.makedirs(all_roads_dir, exist_ok=True)
 
     # load TYC geojson features prioritized by year (prefer 2023, then 2022...)

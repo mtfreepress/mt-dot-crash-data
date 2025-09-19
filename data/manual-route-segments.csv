@@ -88,8 +88,8 @@ MT-200_MT-3_US-87,N-57,Lewistown,14-6A-057,080+0.850,081+0.161,
 MT-200_MT-3_US-87,N-57,Far Side of Lewistown,14-6A-009,083+0.167,086+0.079,
 MT-200_MT-3_US-87,N-57,Grass Range,14-7-005,104+0.655,112+0.985,End of road sections where crashes happen in the top 100 on N-57
 MT-200_MT-3_US-87,N-57,Glendive,11-5A-006,322+0.694,324+0.919,way too far. prob leave this off
-US-12,N-8,Start ,39-3-006,000+0.000,,West of Helena about 40 miles
-US-12,N-8,Helena ,25-7C-004,036+0.833,040+0.344,
+US-12,N-8,Start,39-3-006,000+0.000,,West of Helena about 40 miles
+US-12,N-8,Helena,25-7C-004,036+0.833,040+0.344,
 US-93,N-7,Idaho Border,41-5-004,000+0.000,,
 US-93,N-7,Hamilton,41-2A-014,046+0.623,047+0.042,
 US-93,N-7,Stevensville,41-1-002,061+0.123,066+0.743,
@@ -100,7 +100,7 @@ MT-87,P-13,Idaho Border,29-6-009,000+0.000,,
 MT-87,P-13,Ennis,29-4-010,047+0.988,048+0.801,High acc section occurs before Ennis. no need to continue
 US-12,P-14,Townsend,04-1-003,000+0.557,002+0.398,
 US-12,P-14,White Sulfur Springs,30-3-003,039+0.149,041+0.681,
-MT-1,P-19,I-90 Exit 208 ,12-1B-001,000+0.000,,
+MT-1,P-19,I-90 Exit 208,12-1B-001,000+0.000,,
 MT-1,P-19,Anaconda,12-1C-052,008+0.155,008+0.292,
 MT-1,P-19,Drummond / I-90 Exit 153,20-1-015,061+0.159,063+0.887,
 MT-200_US-89,P-3,Choteau,50-3-002,041+0.945,046+0.526,
@@ -146,3 +146,44 @@ S-347,S-347,Use Entire Route,,,,
 S-453,S-453,Use Entire Route,,,,
 S-486,S-486,Use Entire Route,,,,
 S-540,S-540,Use Entire Route,,,,
+US-87,N-16,Billings,56-4A-018,004+0.746,009+0.864,excluding main street and Montana ave
+US-87,N-16,Roundup,33-3-007,045+0.566,047+0.847,
+MT-40,N-38,Use Entire Route,,,,Connects Columbia Falls and Whitefish
+MT-200/MT-3/US-87/US-89,N-60,Great Falls,07-2A-019,088+0.823,090+0.371,
+MT-200/MT-3/US-87/US-89,N-60,Armington,W-127,071+0.074,074+0.033,Goes toward Stanford. Terminates by splitting in to US-89/US-87
+S-548,S-548,Use Entire Route,,,,Near Kalispell
+MT-24,P-42,Flowing Wells,28-5-010,000+0.000,,Turn off for Fort Peck Lake
+MT-24,P-42,Fort Peck,53-7-001,056+0.310,058+0.916,Fort Peck
+MT-24,P-42,Glasgow,53-4-021,073+0.346,075+0.660,End of Route
+MT-48,P-47,Use Entire Route,,,,"Starts near Anaconda, ends near warm springs. Connects MT-1 and I-90"
+MT-2/MT-69,P-69,Whitehall,,000+0.613,004+0.259,
+MT-2/MT-69,P-69,Boulder,,014+0.440,037+0.219,
+MT-82,P-82,Use Entire Route,,,,Connects US-93 and MT-35 north of Flathead Lake
+S-205,S-205,Three Forks,16-1-003,000+0.000,,Exit 278 Frontage Road from Three Forks to Bozeman
+S-205,S-205,Manhattan,16-1-019,008+0.628,010+0.343,
+S-205,S-205,Far Side of Manhattan,16-1-022,	010+0.963,013+0.726,
+S-205,S-205,Belgrade,16-2-012,013+0.726,015+0.454,
+S-209,S-209,Use Entire Route,,,,Connects MT-35 and US-83
+S-211,S-211,Ronan,24-3-020,	000+0.938,002+0.710,Round Butte Road
+S-211,S-211,End,	24-3-007,004+0.733,009+0.723,
+S-235,S-235,Use Entire Route,,,,Connects I-90 and MT-85 near Bozeman
+S-269,S-269,Hamilton,41-2A-025,001+0.509,	004+0.654,
+S-269,S-269,Stevensville,41-1-012,	015+0.141,	019+0.560,
+S-269,S-269,Far Side of Stevensville,41-1-015,	020+0.055,	021+0.354,
+S-269,S-269,End at US-93,41-1-015,	020+0.055,	021+0.354,
+S-282,S-282,Use Entire Route,,,,Exit 187 on I-15
+S-284,S-284,Use Entire Route,,,,"Starts between East Helena and Winston, ends Near Townsend"
+S-308,S-308,Red Lodge,05-3-023,000+0.000,,
+S-308,S-308,Bearcreek,05-3-004,	001+0.540,006+0.007,
+S-308,S-308,Far Side of Bearcreek,05-3-005,	006+0.826,	008+0.773,
+S-308,S-308,Belfry,	05-3-010,008+0.773,014+0.263,
+S-346,S-346,Manhattan,16-1-028,000+1.019,002+0.941,Start 45mph zone out of Manhattan
+S-346,S-346,Use Entire Route,16-2-006,002+0.941,007+0.924,Ends at S-290 about 5 miles west of Manhattan
+S-354,S-354,Use Entire Route,,,,Opposite from US-93 Near Ronan/Polson
+S-370,S-370,Use Entire Route,,,,Bell Crossing near Stevensville
+S-421,S-421,Use Entire Route,,,,Columbus to Joliet Cutacross
+S-471,S-471,Use Entire Route,,,,MT-200 Near Thompson Falls to Idaho Border
+S-473,S-473,Use Entire Route,,,,
+S-474,S-474,Use Entire Route,,,,Includes U-8135
+S-571,S-571,Use Entire Route,,,,
+S-574,S-574,Use Entire Route,,,,

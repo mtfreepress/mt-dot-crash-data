@@ -7,7 +7,7 @@ def get_script_directory():
 
 def setup_output_directories():
     script_dir = get_script_directory()
-    base_output_dir = os.path.join(script_dir, 'data_analysis')
+    base_output_dir = os.path.join(script_dir, 'output', 'data_analysis')
     by_car_dir = os.path.join(base_output_dir, 'by_car')
     by_mileage_dir = os.path.join(base_output_dir, 'by_milage')
     os.makedirs(base_output_dir, exist_ok=True)
@@ -26,7 +26,7 @@ def analyze_traffic_data():
 
     script_dir = get_script_directory()
     base_output_dir, by_car_dir, by_mileage_dir = setup_output_directories()
-    input_file = os.path.join(script_dir, 'processed-data', 'merged-data', 'merged_traffic_average.csv')
+    input_file = os.path.join(script_dir, 'output', 'merged_data', 'merged_traffic_average.csv')
 
     try:
         df = pd.read_csv(input_file)
@@ -131,8 +131,9 @@ def analyze_traffic_data():
         # reproject to WGS84 for GeoJSON/web mapping compatibility
         all_found_gdf = all_found_gdf.to_crs("EPSG:4326")
 
-        output_geojson = os.path.join(script_dir, 'data_analysis', f'top_{TOP_N_ENTRIES}_by_cars.geojson')
-        simple_geojson = os.path.join(script_dir, 'data_analysis', 'simple_by_cars.geojson')
+        # use the output data_analysis directory under output/
+        output_geojson = os.path.join(base_output_dir, f'top_{TOP_N_ENTRIES}_by_cars.geojson')
+        simple_geojson = os.path.join(base_output_dir, 'simple_by_cars.geojson')
 
         all_found_gdf.to_file(output_geojson, driver='GeoJSON')
         # print(f"GeoJSON with highlights written to: {output_geojson}")
@@ -143,7 +144,7 @@ def analyze_traffic_data():
             all_found_gdf.apply(lambda row: (str(row['DEPT_ID']).strip(), str(row['SITE_ID']).strip()) in top_pairs, axis=1)
         ]
 
-        # emove duplicates
+        # remove duplicates
         simple_gdf = simple_gdf.drop_duplicates(subset=['DEPT_ID', 'SITE_ID'])
 
         # only keep the top N — should already be N, but just in case™

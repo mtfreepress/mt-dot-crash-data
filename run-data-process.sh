@@ -25,15 +25,15 @@ python analyze_data.py
 python manually_segment_routes.py
 python analyze_trips.py
 
-echo "Pipeline complete. Check data_analysis/, processed-data/, manual-segments/, and trip_analysis/ for outputs."
+echo "Pipeline complete. Check output/data_analysis/, output/merged_data/, output/all_roads/, output/manual-segments/, and output/trip_analysis/ for outputs."
 
 # only run comparison if sha256 tool available
 if [ -n "$SHA256" ]; then
   # files to compare
   csv1="mtfp_result_data/trip_analysis/per_vmt.csv"
-  csv2="trip_analysis/per_vmt.csv"
+  csv2="output/trip_analysis/per_vmt.csv"
   json1="mtfp_result_data/trip_analysis/per_vmt/top_50.json"
-  json2="trip_analysis/per_vmt/top_50.json"
+  json2="output/trip_analysis/per_vmt/top_50.json"
 
   # compare hashes
   csv_match=false
