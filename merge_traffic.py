@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -351,15 +352,27 @@ def create_simplified_average_output(
     # 7. calculate derived metrics
     complete_df['SEC_LNT_MI'] = pd.to_numeric(complete_df['SEC_LNT_MI'], errors='coerce')
     complete_df['TYC_AADT'] = pd.to_numeric(complete_df['TYC_AADT'], errors='coerce')
+    # daily VMT (vehicle-miles traveled per day for the segment) = AADT * segment miles
     complete_df['MILES_DRIVEN'] = complete_df['SEC_LNT_MI'] * complete_df['TYC_AADT']
-    
+
     total_years = len(years)
+    # average crashes per year across the window
     complete_df['AVG_CRASHES'] = complete_df['TOTAL_CRASHES'] / total_years
-    
-    # alculate rates
+
+    # compute annual VMT using 365.25 days to account for leap years
+    complete_df['ANNUAL_VMT'] = complete_df['MILES_DRIVEN'] * 365.25
+
+    # crashes per 100 million vehicle miles traveled
+    complete_df['PER_100M_VMT'] = None
+    mask_vmt = complete_df['ANNUAL_VMT'].notna() & (complete_df['ANNUAL_VMT'] > 0)
+    complete_df.loc[mask_vmt, 'PER_100M_VMT'] = (
+        complete_df.loc[mask_vmt, 'AVG_CRASHES'] / complete_df.loc[mask_vmt, 'ANNUAL_VMT']
+    ) * 100_000_000
+
+    # alculate other rates
     complete_df['CARS_PER_ACC'] = None
     complete_df['MILES_PER_ACC'] = None
-    
+
     mask_crashes = complete_df['AVG_CRASHES'] > 0
     complete_df.loc[mask_crashes, 'CARS_PER_ACC'] = (
         complete_df.loc[mask_crashes, 'TYC_AADT'] / complete_df.loc[mask_crashes, 'AVG_CRASHES']
@@ -370,9 +383,9 @@ def create_simplified_average_output(
     
     # prepare final output columns
     desired_columns = [
-        'CORRIDOR', 'SITE_ID', 'CORR_MP', 'CORR_ENDMP', 'DEPT_ID', 'TOTAL_CRASHES',
+        'SEGMENT_KEY', 'CORRIDOR', 'SITE_ID', 'CORR_MP', 'CORR_ENDMP', 'DEPT_ID', 'TOTAL_CRASHES',
         'SEC_LNT_MI', 'TYC_AADT', 'MILES_DRIVEN', 'LOCATION', 'COUNTY',
-        'ROUTE_NAME', 'SIGNED_ROUTE', 'SYSTEM', 'AVG_CRASHES', 'CARS_PER_ACC', 'MILES_PER_ACC'
+        'ROUTE_NAME', 'SIGNED_ROUTE', 'SYSTEM', 'AVG_CRASHES', 'CARS_PER_ACC', 'MILES_PER_ACC', 'PER_100M_VMT'
     ]
     
     # check all columns exist
@@ -407,17 +420,8 @@ def create_simplified_average_output(
         
         sections_with_crashes.sort_values('MILES_PER_ACC', ascending=True).to_csv(sort_mile_csv, index=False)
         print(f"Sorted by miles/accident written to {sort_mile_csv} with {len(sections_with_crashes)} rows.")
-    
-    # 10. Final check
-    print("\n=== FINAL RESULTS ===")
-    print(f"Total segments: {len(output_df)}")
-    print(f"Segments with crashes: {(output_df['TOTAL_CRASHES'] > 0).sum()}")
-    print(f"Segments without crashes: {(output_df['TOTAL_CRASHES'] == 0).sum()}")
 
-    all_roads_dir = os.path.join('output', 'all_roads')
-    os.makedirs(all_roads_dir, exist_ok=True)
-
-    # load TYC geojson features prioritized by year (prefer 2023, then 2022...)
+    # ===== Prepare TYC geojson map (needed by point export) =====
     def load_tyc_geojson_map(years, base_dir='data/Traffic_Yearly_Counts'):
         """Return dict mapping SEGMENT_KEY -> geojson feature, preferring earlier years in the list.
 
@@ -437,8 +441,8 @@ def create_simplified_average_output(
                     try:
                         with open(path, 'r') as fh:
                             js = json.load(fh)
-                    except Exception as e:
-                        # print(f"[DEBUG] Failed to load geojson {path}: {e}")
+                    except Exception as exc:
+                        print(f"[DEBUG] Failed to load geojson {path}: {exc}")
                         continue
 
                     for feat in js.get('features', []):
@@ -452,13 +456,165 @@ def create_simplified_average_output(
                         if key not in combined:
                             combined[key] = feat
                     found = True
-                    # print(f"[DEBUG] Loaded {len(js.get('features', []))} features from {path}")
                     break
             if not found:
                 print(f"[DEBUG] No TYC geojson found for year {year} in {base_dir} or {base_dir}_{year}")
         return combined
 
     geojson_map = load_tyc_geojson_map(years)
+
+    # ===== Generate a simplified point GeoJSON for mapping =====
+    def point_on_linestring(geometry, prefer='midpoint'):
+        """Return a [lon, lat] point given a LineString/MultiLineString geometry.
+
+        prefer: 'midpoint' or 'start'
+        """
+        if geometry is None:
+            return None
+        geom_type = geometry.get('type')
+        coords = None
+
+        if geom_type == 'LineString':
+            coords = geometry.get('coordinates', [])
+        elif geom_type == 'MultiLineString':
+            # flatten by using the longest part
+            parts = geometry.get('coordinates', [])
+            if not parts:
+                return None
+            # pick the part with the most coordinates
+            coords = max(parts, key=lambda p: len(p))
+        else:
+            return None
+
+        if not coords:
+            return None
+
+        if prefer == 'start':
+            return coords[0]
+
+        # compute cumulative distances and find midpoint along the line
+        seg_lengths = []
+        total = 0.0
+        for i in range(1, len(coords)):
+            x0, y0 = coords[i-1]
+            x1, y1 = coords[i]
+            d = math.hypot(x1 - x0, y1 - y0)
+            seg_lengths.append(d)
+            total += d
+
+        if total == 0:
+            return coords[0]
+
+        half = total / 2.0
+        cum = 0.0
+        for i, d in enumerate(seg_lengths, start=1):
+            prev = coords[i-1]
+            cur = coords[i]
+            if cum + d >= half:
+                # interpolate between prev and cur
+                remain = half - cum
+                t = remain / d if d != 0 else 0
+                x = prev[0] + (cur[0] - prev[0]) * t
+                y = prev[1] + (cur[1] - prev[1]) * t
+                return [x, y]
+            cum += d
+
+        # fallback to last coord
+        return coords[-1]
+
+    # Filter segments with crashes > 0 and build point features and line features
+    points = []
+    lines = []
+    geojson_map = load_tyc_geojson_map(years)
+
+    filtered = output_df[output_df['TOTAL_CRASHES'] >= 0].copy()
+    # filter out low-volume segments
+    filtered['TYC_AADT_NUM'] = pd.to_numeric(filtered.get('TYC_AADT', ''), errors='coerce')
+    filtered = filtered[filtered['TYC_AADT_NUM'] >= 1]
+    # Exclude departmental IDs that begin with R, L, X, or U (case-insensitive)
+    depts_exclude = ('R', 'L', 'X', 'U')
+    before_dept_count = len(filtered)
+    filtered = filtered[~filtered['DEPT_ID'].astype(str).str.strip().str.upper().str.startswith(depts_exclude, na=False)]
+    after_dept_count = len(filtered)
+    excluded_by_dept = before_dept_count - after_dept_count
+    if excluded_by_dept > 0:
+        print(f"Filtered out {excluded_by_dept} segments because DEPT_ID starts with {', '.join(depts_exclude)}")
+    if not filtered.empty:
+        for _, row in filtered.iterrows():
+            seg_key = row.get('SEGMENT_KEY')
+            feat = None
+            if seg_key and seg_key in geojson_map:
+                template = geojson_map[seg_key]
+                geom = template.get('geometry')
+                pt = point_on_linestring(geom, prefer='start')
+                if pt is None:
+                    continue
+                # round coordinates to reduce file size and noise
+                try:
+                    pt = [round(float(pt[0]), 5), round(float(pt[1]), 5)]
+                except Exception:
+                    pass
+                props = {}
+                # include only a compact set of useful properties (convert NaN -> empty string)
+                for c in ['SEGMENT_KEY','CORRIDOR','DEPT_ID','TOTAL_CRASHES','AVG_CRASHES','CARS_PER_ACC','MILES_PER_ACC','PER_100M_VMT','ROUTE_NAME','SIGNED_ROUTE','SYSTEM','LOCATION','COUNTY','TYC_AADT']:
+                    val = row.get(c, '')
+                    if c == 'TYC_AADT':
+                        # use numeric TYC_AADT if available, otherwise empty string
+                        num = pd.to_numeric(val, errors='coerce')
+                        if pd.notna(num):
+                            # prefer integer when possible
+                            props[c] = int(num) if float(num).is_integer() else float(num)
+                        else:
+                            props[c] = ''
+                    else:
+                        if pd.isna(val) or val is None:
+                            props[c] = ''
+                        else:
+                            props[c] = val
+
+                feat = {'type':'Feature','geometry':{'type':'Point','coordinates':pt},'properties':props}
+                # also include the full line geometry for this segment
+                try:
+                    line_geom = geom
+                    if line_geom is not None:
+                        line_feat = {'type': 'Feature', 'geometry': line_geom, 'properties': props}
+                        lines.append(line_feat)
+                except Exception:
+                    # if anything goes wrong with line geometry, skip adding the line feature
+                    pass
+            else:
+                # If no geometry available, skip
+                continue
+            points.append(feat)
+
+    points_geojson = {'type':'FeatureCollection','features':points}
+    points_out = os.path.join(merged_dir, 'merged_traffic_average_points.geojson')
+    try:
+        with open(points_out, 'w') as pf:
+            json.dump(points_geojson, pf)
+        print(f"Point GeoJSON written to {points_out} with {len(points)} features (TOTAL_CRASHES>0 filter).")
+    except Exception as exc:
+        print(f"[ERROR] Writing point GeoJSON: {exc}")
+    # write lines GeoJSON with full segment geometries
+    lines_geojson = {'type': 'FeatureCollection', 'features': lines}
+    lines_out = os.path.join(merged_dir, 'merged_traffic_lines.geojson')
+    try:
+        with open(lines_out, 'w') as lf:
+            json.dump(lines_geojson, lf)
+        print(f"Line GeoJSON written to {lines_out} with {len(lines)} features (full geometries).")
+    except Exception as exc:
+        print(f"[ERROR] Writing line GeoJSON: {exc}")
+    
+    # 10. Final check
+    print("\n=== FINAL RESULTS ===")
+    print(f"Total segments: {len(output_df)}")
+    print(f"Segments with crashes: {(output_df['TOTAL_CRASHES'] > 0).sum()}")
+    print(f"Segments without crashes: {(output_df['TOTAL_CRASHES'] == 0).sum()}")
+
+    all_roads_dir = os.path.join('output', 'all_roads')
+    os.makedirs(all_roads_dir, exist_ok=True)
+
+    # (TYC geojson loader already defined above)
 
     # crash columns for per-dept crash files
     dept_crash_cols = [
@@ -490,7 +646,7 @@ def create_simplified_average_output(
     base_columns = list(base_segments_df.columns)
     extra_cols = ['SEGMENT_KEY','CORR_MP_FLOAT','CORR_ENDMP_FLOAT','ROUTE_NAME','SIGNED_ROUTE','SYSTEM',
                   'YEARS_WITH_DATA','TOTAL_CRASHES','COUNTY','CRASHES','MILES_DRIVEN','AVG_CRASHES',
-                  'CARS_PER_ACC','MILES_PER_ACC','LOCATION','ROUTE_FILE_NAME']
+                  'CARS_PER_ACC','MILES_PER_ACC','PER_100M_VMT','LOCATION','ROUTE_FILE_NAME']
     write_cols = list(base_columns) + [c for c in extra_cols if c not in base_columns]
 
     # Pre-build crashes DataFrame once if we have matched crashes
@@ -552,7 +708,7 @@ def create_simplified_average_output(
                     props[col] = val
             
             # Ensure metric extras are present
-            for extra in ('TOTAL_CRASHES', 'AVG_CRASHES', 'CARS_PER_ACC', 'MILES_PER_ACC'):
+            for extra in ('TOTAL_CRASHES', 'AVG_CRASHES', 'CARS_PER_ACC', 'MILES_PER_ACC', 'PER_100M_VMT'):
                 if extra not in props or pd.isna(props.get(extra)):
                     props[extra] = ""
             
