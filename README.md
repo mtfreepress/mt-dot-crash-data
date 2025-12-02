@@ -1,3 +1,6 @@
+# *Note: This project was superceded by [MDT Segment Analysis](https://github.com/mtfreepress/mdt-segment-data-analysis) to work around limitations with the data. Keeping for posterity* _-Jacob Olness 12/1/2025_
+
+
 # Montana DOT Public Crash Data Analysis
 Analysis code and data for the Montana DOT crash-rate article. This repository contains the scripts, intermediate outputs, and final CSVs used to match crash records to highway route segments, compute traffic-weighted rates, and build the highway-to-highway "trips" used in the published analysis.
 
